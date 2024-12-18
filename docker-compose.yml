@@ -8,7 +8,7 @@ services:
       - "${MF_UI_METADATA_PORT:-8083}:${MF_UI_METADATA_PORT:-8083}"
     environment:
       - MF_METADATA_DB_HOST=db
-      - MF_METADATA_DB_PORT=5432
+      - MF_METADATA_DB_PORT=5433
       - MF_METADATA_DB_USER=postgres
       - MF_METADATA_DB_PSWD=postgres
       - MF_METADATA_DB_NAME=postgres
@@ -57,7 +57,7 @@ services:
       - .:/code
     environment:
       - MF_METADATA_DB_HOST=db
-      - MF_METADATA_DB_PORT=5432
+      - MF_METADATA_DB_PORT=5433
       - MF_METADATA_DB_USER=postgres
       - MF_METADATA_DB_PSWD=postgres
       - MF_METADATA_DB_NAME=postgres
@@ -75,8 +75,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+      PGPORT: 5433
     ports:
-      - "5432:5432"
+      - "5433:5433"
     volumes:
       - my_dbdata:/var/lib/postgresql/data2
 volumes:
