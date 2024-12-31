@@ -8,9 +8,9 @@ services:
       - "${MF_UI_METADATA_PORT:-8083}:${MF_UI_METADATA_PORT:-8083}"
     environment:
       - MF_METADATA_DB_HOST=db
-      - MF_METADATA_DB_PORT=5433
-      - MF_METADATA_DB_USER=postgres
-      - MF_METADATA_DB_PSWD=postgres
+      - MF_METADATA_DB_PORT=${MF_METADATA_DB_PORT:-5433}
+      - MF_METADATA_DB_USER=${MF_METADATA_DB_USER:-postgres}
+      - MF_METADATA_DB_PSWD=${MF_METADATA_DB_PSWD:-postgres}
       - MF_METADATA_DB_NAME=postgres
       - MF_UI_METADATA_PORT=${MF_UI_METADATA_PORT:-8083}
       - MF_UI_METADATA_HOST=${MF_UI_METADATA_HOST:-0.0.0.0}
@@ -23,9 +23,9 @@ services:
       - PREFETCH_RUNS_SINCE=2592000 # 30 days in seconds
       - PREFETCH_RUNS_LIMIT=1 # Prefetch only one run
       - S3_NUM_WORKERS=2
-      - CACHE_ARTIFACT_MAX_ACTIONS=1
-      - CACHE_DAG_MAX_ACTIONS=1
-      - CACHE_LOG_MAX_ACTIONS=1
+      - CACHE_ARTIFACT_MAX_ACTIONS=4
+      - CACHE_DAG_MAX_ACTIONS=4
+      - CACHE_LOG_MAX_ACTIONS=4
       - CACHE_ARTIFACT_STORAGE_LIMIT=16000000
       - CACHE_DAG_STORAGE_LIMIT=16000000
       - WS_POSTPROCESS_CONCURRENCY_LIMIT=8
@@ -43,9 +43,14 @@ services:
       - NOTIFICATIONS=$NOTIFICATIONS
       - GA_TRACKING_ID=none
       - PLUGINS=$PLUGINS
-      - AWS_PROFILE=$AWS_PROFILE
+      - METAFLOW_DEFAULT_DATASTORE=${METAFLOW_DEFAULT_DATASTORE:-s3}
+      - METAFLOW_DATASTORE_SYSROOT_S3=${METAFLOW_DATASTORE_SYSROOT_S3:-s3://metaflow}
+      - METAFLOW_S3_ENDPOINT_URL=${METAFLOW_S3_ENDPOINT_URL:-http://minio:9000/}
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY:-minioadmin}
     depends_on:
       - metadata
+      - minio
   metadata:
     image: "netflixoss/metaflow_metadata_service"
     restart: always
@@ -57,9 +62,9 @@ services:
       - .:/code
     environment:
       - MF_METADATA_DB_HOST=db
-      - MF_METADATA_DB_PORT=5433
-      - MF_METADATA_DB_USER=postgres
-      - MF_METADATA_DB_PSWD=postgres
+      - MF_METADATA_DB_PORT=${MF_METADATA_DB_PORT:-5433}
+      - MF_METADATA_DB_USER=${MF_METADATA_DB_USER:-postgres}
+      - MF_METADATA_DB_PSWD=${MF_METADATA_DB_PSWD:-postgres}
       - MF_METADATA_DB_NAME=postgres
       - MF_MIGRATION_ENDPOINTS_ENABLED=1
       - MF_METADATA_PORT=${MF_METADATA_PORT:-8090}
@@ -72,13 +77,26 @@ services:
     restart: always
     container_name: "my_postgres"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${MF_METADATA_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MF_METADATA_DB_PSWD:-postgres}
       POSTGRES_DB: postgres
-      PGPORT: 5433
+      PGPORT: ${MF_METADATA_DB_PORT:-5433}
     ports:
-      - "5433:5433"
+      - "${MF_METADATA_DB_PORT:-5433}:${MF_METADATA_DB_PORT:-5433}"
     volumes:
       - my_dbdata:/var/lib/postgresql/data2
+  minio:
+    container_name: "minio"
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_vol:/minio_data
+    command: minio server /minio_data --console-address :${MINIOPORT_SERVER:-9001}
+    ports:
+      - ${MINIOPORT_SERVER:-9001}:${MINIOPORT_SERVER:-9001}
+      - ${MINIOPORT_ENDPOIN:-9000}:${MINIOPORT_ENDPOIN:-9000}    
 volumes:
   my_dbdata:
+  minio_vol:
