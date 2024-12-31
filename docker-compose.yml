@@ -96,7 +96,7 @@ services:
     command: minio server /minio_data --console-address :${MINIOPORT_SERVER:-9001}
     ports:
       - ${MINIOPORT_SERVER:-9001}:${MINIOPORT_SERVER:-9001}
-      - ${MINIOPORT_ENDPOINT:-9000}:${MINIOPORT_ENDPOINT:-9000}    
+      - ${MINIOPORT_ENDPOINT:-9000}:9000    
 volumes:
   my_dbdata:
   minio_vol:
