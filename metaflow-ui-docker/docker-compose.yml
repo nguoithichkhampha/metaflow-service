@@ -2,7 +2,7 @@ version: "3"
 services:
   metaflow-ui:
     image: "nguoithichkhampha/metaflow-ui:latest"
-    restart: always
+    restart: unless-stopped
     container_name: "metaflow-ui"
     ports:
       - 3000:3000
